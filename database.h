@@ -500,7 +500,7 @@ public:
 				{
 					X.cnt=0;
 					for(int i=0;i<res.cnt;i++)
-						X.val[X.cnt++]=std::make_pair(1,res.val[i].second);
+						X.val[X.cnt++]=res.val[i];
 					file.update_list(X,tmp.son[i]);
 				}
 				return res;

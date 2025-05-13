@@ -28,7 +28,6 @@ int main()
                 puts("null");
             else
             {
-                puts("nmsl");
                 for(int i=0;i<res.cnt;i++)
                     printf("%d ",res.val[i].second);
                 puts("");
