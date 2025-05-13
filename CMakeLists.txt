@@ -5,5 +5,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(code
         database.h
-        main.cpp
-        my_stl.h)
+        main.cpp)
