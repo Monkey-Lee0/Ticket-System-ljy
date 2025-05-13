@@ -18,6 +18,38 @@ using name10=char[11];
 using name13=char[14];
 
 template<class T>
+void my_stable_sort(T* l,T* r,bool (*cmp)(const T& l,const T& r))
+{
+	int siz=r-l;
+	if(!siz)
+		return ;
+	auto tmp=new T[siz];
+	for(int i=2;i<siz;i<<=1)
+	{
+		for(int j=0;j<siz;j+=i)
+		{
+			int L=j,R=std::min(L+i,siz),mid=std::min(L+(i>>1),siz);
+			if(L==mid)
+				continue;
+			int pos1=L,pos2=mid;
+			while(pos1!=mid||pos2!=R)
+			{
+				if(pos1==mid)
+					tmp[pos1+pos2]=l[pos2],pos2++;
+				else if(pos2==R)
+					tmp[pos1+pos2]=l[pos1],pos1++;
+				else if(cmp(l[pos2],l[pos1]))
+					tmp[pos1+pos2]=l[pos2],pos2++;
+				else
+					tmp[pos1+pos2]=l[pos1],pos1++;
+			}
+			memcpy(l+L,tmp,sizeof(T)*(R-L));
+		}
+	}
+	delete[] tmp;
+}
+
+template<class T>
 class Node
 {
 public:
@@ -470,8 +502,8 @@ public:
 				if(tmp.son[i]<0)
 					return {};
 				auto X=file.read_list<T0>(tmp.son[i]);
-				std::stable_sort(X.val,X.val+X.cnt,
-					[](const std::pair<bool,T0> &a,const std::pair<bool,T0> &b){return a.second<b.second;});
+				my_stable_sort<std::pair<bool,T0>>(X.val,X.val+X.cnt,
+					[](const std::pair<bool,T0> &a,const std::pair<bool,T0> &b)->bool{return a.second<b.second;});
 				if(!X.cnt)
 					return {};
 				List<T0> res;
