@@ -5,7 +5,7 @@
 #include<utility>
 #include<cstring>
 #include<vector>
-#include<set>
+#include<algorithm>
 #include<unordered_map>
 
 constexpr int MAXN=24;
@@ -446,19 +446,36 @@ public:
 				if(tmp.son[i]<0)
 					return {};
 				auto X=file.read_list<T0>(tmp.son[i]);
-				std::set<T0> S;
+				std::stable_sort(X.val.begin(),X.val.begin()+X.cnt,
+					[](const std::pair<bool,T0> &a,const std::pair<bool,T0> &b){return a.second<b.second;});
+				if(X.val.size()==0)
+					return {};
+				std::vector<T0> res;
+				T0 las=X.val[0].second;int count=0;
 				for(int j=0;j<X.cnt;j++)
-					if(!X.val[j].first)
-						S.erase(X.val[j].second);
-				else
-					S.insert(X.val[j].second);
-				std::vector<int> res;
-				for(auto t:S)
-					res.push_back(t);
-				if(S.size()!=X.val.size())
+					if(X.val[j].second==las)
+					{
+						if(X.val[j].first)
+							count++;
+						else if(count)
+							count--;
+					}
+					else
+					{
+						if(count)
+							res.push_back(las);
+						las=X.val[j].second;
+						if(X.val[j].first)
+							count=1;
+						else
+							count=0;
+					}
+				if(count)
+					res.push_back(las);
+				if(res.size()!=X.val.size())
 				{
 					X.cnt=0;
-					for(auto t:S)
+					for(auto t:res)
 						X.val[X.cnt++]=std::make_pair(1,t);
 					file.update_list(X,tmp.son[i]);
 				}
