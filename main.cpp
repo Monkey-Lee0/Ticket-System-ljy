@@ -24,12 +24,13 @@ int main()
         }
         else
         {
-            if(auto res=BPT.Find(s); res.empty())
+            if(auto res=BPT.Find(s); !res.cnt)
                 puts("null");
             else
             {
-                for(const auto t:res)
-                    printf("%d ",t);
+                puts("nmsl");
+                for(int i=0;i<res.cnt;i++)
+                    printf("%d ",res.val[i].second);
                 puts("");
             }
         }

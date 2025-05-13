@@ -2,6 +2,7 @@
 #define DATABASE_H
 
 #include<fstream>
+#include<iostream>
 #include<utility>
 #include<cstring>
 #include<vector>
@@ -31,22 +32,38 @@ class List
 {
 public:
 	std::pair<bool,T>* val;
-	int cnt=0,ms=4;
+	int cnt=0,ms=0;
 	List()=default;
-	explicit List(const bool tim,const T& a)
+	explicit List(const bool tim,const T& a):ms(4)
 	{
 		val=new std::pair<bool,T>[4];
 		val[cnt++]=std::make_pair(tim,a);
+	}
+	List(const List<T> &other):cnt(other.cnt),ms(other.ms)
+	{
+		if(ms)
+		{
+			val=new std::pair<bool,T>[ms];
+			memcpy(val,other.val,sizeof(std::pair<bool,T>)*ms);
+		}
 	}
 	void doubleSpace()
 	{
 		auto odd=val;
 		val=new std::pair<bool,T>[ms<<1];
-		memcpy(val,odd,sizeof(std::pair<bool,T>)*ms);
+		if(odd!=nullptr)
+			memcpy(val,odd,sizeof(std::pair<bool,T>)*ms),delete[] odd;
 		ms<<=1;
-		delete[] odd;
 	}
-	~List(){delete[] val;}
+	void push_back(const T &p)
+	{
+		if(!ms)
+			val=new std::pair<bool,T>[4],ms=4;
+		else if(cnt==ms)
+			doubleSpace();
+		val[cnt++]=std::make_pair(1,p);
+	}
+	~List(){;if(ms)delete[] val;}
 };
 
 // An advanced Memoryriver for any normal types and lists.
@@ -438,14 +455,13 @@ public:
 		else
 			file.update_T(tmp,now);
 	}
-	std::vector<int> Find(const T key)
+	List<T0> Find(const T key)
 	{
 		if(!file.read_info(3))
 			return {};
 		const int now=search_to_leaf(key);
 		auto tmp=file.read_T<Node<T>>(now);
 		const auto cnt=COUNT_OF(tmp);
-		std::vector<T0> val;
 		for(int i=0;i<cnt;i++)
 		{
 			const int ok=strcmp(tmp.key[i],key);
@@ -458,7 +474,7 @@ public:
 					[](const std::pair<bool,T0> &a,const std::pair<bool,T0> &b){return a.second<b.second;});
 				if(!X.cnt)
 					return {};
-				std::vector<T0> res;
+				List<T0> res;
 				T0 las=X.val[0].second;int count=0;
 				for(int j=0;j<X.cnt;j++)
 					if(X.val[j].second==las)
@@ -480,11 +496,11 @@ public:
 					}
 				if(count)
 					res.push_back(las);
-				if(res.size()!=X.cnt)
+				if(res.cnt!=X.cnt)
 				{
 					X.cnt=0;
-					for(auto t:res)
-						X.val[X.cnt++]=std::make_pair(1,t);
+					for(int i=0;i<res.cnt;i++)
+						X.val[X.cnt++]=std::make_pair(1,res.val[i].second);
 					file.update_list(X,tmp.son[i]);
 				}
 				return res;
