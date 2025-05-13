@@ -229,40 +229,156 @@ public:
 	}
 	char* data() const {return p;}
 };
+	template<typename T, class Compare = std::less<T>>
+	class priority_queue {
+		Compare cmp;
+		struct Node
+		{
+			const T val;
+			Node *son=nullptr, *to=nullptr;
+			Node(const T& val,Node *s,Node *t):val(val),son(s),to(t){}
+		};
+		Node *root;
+		size_t cnt_of_node=0;
+		Node* dfs_copy(Node *x)
+		{
+			if(x==nullptr)
+				return nullptr;
+			return new Node(x->val,dfs_copy(x->son),dfs_copy(x->to));
+		}
+		void dfs_delete(Node *x)
+		{
+			if(x==nullptr)
+				return;
+			dfs_delete(x->son);
+			dfs_delete(x->to);
+			delete x;
+		}
+		Node* merge_sibling(Node *x, const int cnt=0)
+		{
+			if(x==nullptr||x->to==nullptr)
+				return x;
+			Node *y=x->to;
+			Node *z=merge_sibling(y->to,cnt+1);
+			x->to=y->to=nullptr;
+
+			if(!cmp(x->val,y->val))
+			{
+				y->to=x->son;
+				x->son=y;
+			}
+			else
+			{
+				x->to=y->son;
+				y->son=x;
+				std::swap(x,y);
+			}
+			if(z==nullptr)
+				return x;
+
+			if(!cmp(x->val,z->val))
+			{
+				z->to=x->son;
+				x->son=z;
+			}
+			else
+			{
+				x->to=z->son;
+				z->son=x;
+				std::swap(x,z);
+			}
+			x->to=nullptr;
+
+			return x;
+		}
+	public:
+		priority_queue():root(nullptr){}
+		priority_queue(const priority_queue &other):root(dfs_copy(other.root)),cnt_of_node(other.cnt_of_node){}
+		~priority_queue() {dfs_delete(root);}
+		priority_queue &operator=(const priority_queue &other)
+		{
+			if(&other==this)
+				return *this;
+			dfs_delete(root);
+			root=dfs_copy(other.root);
+			cnt_of_node=other.cnt_of_node;
+			return *this;
+		}
+		const T & top() const {return root->val;}
+		void push(const T &e)
+		{
+			if(root==nullptr)
+			{
+				cnt_of_node++;
+				root=new Node(e,nullptr,nullptr);
+				return ;
+			}
+			bool chk=!cmp(e,root->val);
+			cnt_of_node++;
+			if(chk)
+			{
+				Node *new_root=new Node(e,root,nullptr);
+				root=new_root;
+			}
+			else
+			{
+				Node *new_son=new Node(e,nullptr,root->son);
+				root->son=new_son;
+			}
+		}
+
+		/**
+		 * @brief delete the top element from the priority queue.
+		 * @throws container_is_empty if empty() returns true
+		 */
+		void pop()
+		{
+			Node *new_root=merge_sibling(root->son);
+			cnt_of_node--;
+			delete root;
+			root=new_root;
+		}
+		size_t size() const {return cnt_of_node;}
+		bool empty() const {return !cnt_of_node;}
+		void merge(priority_queue &other)
+		{
+			if(root==nullptr)
+				return root=other.root,cnt_of_node=other.cnt_of_node,other.root=nullptr,other.cnt_of_node=0,void();
+			if(other.root==nullptr)
+				return ;
+			bool chk=cmp(other.root->val,root->val);
+			if(!chk)
+			{
+				root->to=other.root->son;
+				other.root->son=root;
+				root=other.root;
+			}
+			else
+			{
+				other.root->to=root->son;
+				root->son=other.root;
+			}
+			cnt_of_node+=other.cnt_of_node;
+			other.root=nullptr,other.cnt_of_node=0;
+		}
+	};
 
 	template<class T>
-	void sort(typename vector<T>::iterator ll, typename vector<T>::iterator rr)
+	void sort(typename vector<T>::iterator l, typename vector<T>::iterator r)
 	{
-		static bool init=false;
-		if(!init)
-			init=true,srand(time(nullptr));
-		vector<std::pair<typename vector<T>::iterator, typename vector<T>::iterator>> sta;
-		sta.push_back(std::make_pair(ll,rr));
-		while(!sta.empty())
+		if(l==r)
+			return ;
+		priority_queue<T> p;
+		auto ll=l;
+		while(ll!=r)
+			p.push(*ll),++ll;
+		ll=r,--ll;
+		while(!p.empty())
 		{
-			auto l=sta.back().first,r=sta.back().second;
-			sta.pop_back();
-			if(r-l<=0)
-				continue;
-			vector<T> L,M,R;
-			int target=rand()%(r-l+1);
-			T target_value=*(l+target);
-			for(auto i=l;i!=r;++i)
-				if(*i<target_value)
-					L.push_back(*i);
-				else if(*i==target_value)
-					M.push_back(*i);
-				else
-					R.push_back(*i);
-			for(auto i=l;i!=l+L.size();++i)
-				*i=L[i-l];
-			for(auto i=l+L.size();i!=r-R.size();++i)
-				*i=M[i-l-L.size()];
-			for(auto i=r-R.size();i!=r;++i)
-				*i=R[r-i-1];
-			sta.push_back(std::make_pair(l,l+L.size()));
-			sta.push_back(std::make_pair(r-R.size(),r));
-
+			*ll=p.top();
+			p.pop();
+			if(!p.empty())
+				--ll;
 		}
 	}
 }
