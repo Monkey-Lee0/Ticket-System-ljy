@@ -231,31 +231,39 @@ public:
 };
 
 	template<class T>
-	void sort(typename vector<T>::iterator l, typename vector<T>::iterator r)
+	void sort(typename vector<T>::iterator ll, typename vector<T>::iterator rr)
 	{
 		static bool init=false;
 		if(!init)
 			init=true,srand(time(nullptr));
-		if(r-l<=0)
-			return ;
-		vector<T> L,M,R;
-		int target=rand()%(r-l+1);
-		T target_value=*(l+target);
-		for(auto i=l;i!=r;++i)
-			if(*i<target_value)
-				L.push_back(*i);
-			else if(*i==target_value)
-				M.push_back(*i);
-			else
-				R.push_back(*i);
-		for(auto i=l;i!=l+L.size();++i)
-			*i=L[i-l];
-		for(auto i=l+L.size();i!=r-R.size();++i)
-			*i=M[i-l-L.size()];
-		for(auto i=r-R.size();i!=r;++i)
-			*i=R[r-i-1];
-		sort<T>(l,l+L.size());
-		sort<T>(r-R.size(),r);
+		vector<std::pair<typename vector<T>::iterator, typename vector<T>::iterator>> sta;
+		sta.push_back(std::make_pair(ll,rr));
+		while(!sta.empty())
+		{
+			auto l=sta.back().first,r=sta.back().second;
+			sta.pop_back();
+			if(r-l<=0)
+				continue;
+			vector<T> L,M,R;
+			int target=rand()%(r-l+1);
+			T target_value=*(l+target);
+			for(auto i=l;i!=r;++i)
+				if(*i<target_value)
+					L.push_back(*i);
+				else if(*i==target_value)
+					M.push_back(*i);
+				else
+					R.push_back(*i);
+			for(auto i=l;i!=l+L.size();++i)
+				*i=L[i-l];
+			for(auto i=l+L.size();i!=r-R.size();++i)
+				*i=M[i-l-L.size()];
+			for(auto i=r-R.size();i!=r;++i)
+				*i=R[r-i-1];
+			sta.push_back(std::make_pair(l,l+L.size()));
+			sta.push_back(std::make_pair(r-R.size(),r));
+
+		}
 	}
 }
 
