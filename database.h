@@ -9,7 +9,8 @@
 
 using namespace sjtu;
 
-constexpr int MAXN=4;
+constexpr int MAXN=24;
+constexpr int CACHESIZE=256;
 using name60=char[61];
 using name30=char[31];
 using name20=char[21];
@@ -47,48 +48,109 @@ class DataInteractor
 private:
     std::fstream file;
     int info[info_len]{};
+    std::unordered_map<int,std::string> cache;
+    std::unordered_map<int,bool> cache_state;
+    std::unordered_map<int,int> cache_times;
+    vector<int> cache_stack[10];
     void download()// Erase block from cache
     {
-        auto [l,p]=*cache.begin();
-        file.seekp(l);
-        file.write(p.data(),p.size());
-        cache.erase(l);
-    }
-    void upload(const int l,const int r)// Push block to cache  (if overcrowded, delete the element earliest visited)
-    {
-        puts("?????");
-        if(cache.contains(l)&&cache[l].size()==r-l)
+        int index=-1;
+        for(int i=0;i<=9&&index==-1;i++)
+            while(!cache_stack[i].empty())
+            {
+                if(!cache_times.contains(cache_stack[i].back()))
+                    exit(0);
+                const auto real=std::min(9,cache_times[cache_stack[i].back()]);
+                if(real!=i)
+                    cache_stack[real].push_back(cache_stack[i].back());
+                else
+                    index=cache_stack[i].back();
+                cache_stack[i].pop_back();
+                if(index!=-1)
+                    break;
+            }
+        const int state=cache_state[index];cache_state.erase(index);
+        const auto data=cache[index];cache.erase(index);
+        cache_times.erase(index);
+        if(!state)
             return ;
-        if(cache.size()>2048)
+        file.seekp(index);
+        file.write(data.data(),CACHESIZE);
+    }
+    void upload(const int block)// Push block to cache  (if overcrowded, delete the element earliest visited)
+    {
+        if(block+CACHESIZE>info[0])
+        {
+            file.seekp(info[0]);
+            char a[block+CACHESIZE-info[0]];
+            file.write(a,block+CACHESIZE-info[0]);
+        }
+        if(cache.contains(block))
+            return cache_times[block]++,void();
+        if(cache.size()>1024)
             download();
         std::string p;
-        p.resize(r-l);
-        file.seekg(l);
-        file.read(p.data(),r-l);
-        cache.emplace(l,p);
+        p.resize(CACHESIZE);
+        file.seekg(block);
+        file.read(p.data(),CACHESIZE);
+        cache.emplace(block,p);
+        cache_state.emplace(block,false);
+        cache_times[block]=0;
+        cache_stack[0].push_back(block);
+    }
+    void new_block(const int block)// create a block
+    {
+        file.seekp(block);
+        char str[CACHESIZE];
+        file.write(str,CACHESIZE);
+    }
+    std::string read_block(const int block)// read a block
+    {
+        upload(block);
+        return cache[block];
+    }
+    void write_block(const int block,const std::string& str)// write to a block
+    {
+        upload(block);
+        cache[block]=str;
+        cache_state[block]=true;
+    }
+    static int belonged_block(const int index)// to get which block the index is in
+    {
+        return (index-info_len*sizeof(int))/CACHESIZE*CACHESIZE+info_len*sizeof(int);
     }
     std::string read_data(const int l,const int r)// to get data from an interval
     {
-        std::string str;
-        str.resize(r-l);
-        file.seekg(l);
-        file.read(str.data(),r-l);
-        return str;
-        // upload(l,r);
-        // return cache[l];
+        const int bl=belonged_block(l),br=belonged_block(r-1);
+        std::string total_str;
+        for(int i=bl;i<=br;i+=CACHESIZE)
+            total_str+=read_block(i);
+        return total_str.substr(l-bl,r-l);
     }
-    void write_data(const int l,const int r,const std::string& str, const int upl=false)// to write data to an interval
+    void write_data(const int l,const int r,const std::string& str)// to write data to an interval
     {
-        if(upl)
-            upload(l,r),cache[l]=str;
+        if(const int bl=belonged_block(l),br=belonged_block(r-1); bl==br)
+        {
+            std::string tmp=read_block(bl);
+            for(int i=l;i<r;++i)
+                tmp[i-bl]=str[i-l];
+            write_block(bl,tmp);
+        }
         else
         {
-            file.seekp(l);
-            file.write(str.data(),r-l);
+            std::string tmp=read_block(bl);
+            for(int i=l;i<bl+CACHESIZE;++i)
+                tmp[i-bl]=str[i-l];
+            write_block(bl,tmp);
+            for(int i=bl+CACHESIZE;i<br;i+=CACHESIZE)
+                write_block(i,str.substr(i-l,CACHESIZE));
+            tmp=read_block(br);
+            for(int i=br;i<r;++i)
+                tmp[i-br]=str[i-l];
+            write_block(br,tmp);
         }
     }
 public:
-    std::unordered_map<int,std::string> cache;
     // services for constructor and destructor
     explicit DataInteractor(const std::string &FILE)
     {
@@ -100,8 +162,9 @@ public:
             file.open(FILE,std::ios::out);
             int tmp=0,initial=info_len*sizeof(int);
             file.write(reinterpret_cast<char *>(&initial),sizeof(int));
-            info[0]=initial;
-            for(int i=1;i<info_len;++i)
+            file.write(reinterpret_cast<char *>(&initial),sizeof(int));
+            info[0]=info[1]=initial;
+            for(int i=2;i<info_len;++i)
                 file.write(reinterpret_cast<char *>(&tmp),sizeof(int)),info[i]=0;
             file.close();
             file.open(FILE,std::ios::in|std::ios::out);
@@ -131,20 +194,24 @@ public:
     template<class T>
     T read_T(const int index){return *reinterpret_cast<T*>(read_data(index,index+sizeof(T)).data());}
     template<class T>
-    void update_T(T &a,const int index,int upl=false)
+    void update_T(T &a,const int index)
     {
         std::string str;
         str.resize(sizeof(T));
         memcpy(str.data(),&a,sizeof(T));
-        write_data(index,index+sizeof(T),str,upl);
+        write_data(index,index+sizeof(T),str);
     }
     template<class T>
     int write_T(T &a)
     {
         const int index=info[0];
-        file.seekp(index);
-        file.write(reinterpret_cast<char*>(&a),sizeof(T));
         info[0]+=sizeof(T);
+        while(info[1]<info[0])
+        {
+            new_block(info[1]);
+            info[1]+=CACHESIZE;
+        }
+        update_T(a,index);
         return index;
     }
 
@@ -174,11 +241,13 @@ public:
     int write_list(List<T> &a)
     {
         const int index=info[0];
-        file.seekp(index);
         info[0]+=2*sizeof(int)+a.ms*sizeof(std::pair<bool,T>);
-        file.write(reinterpret_cast<char*>(&a.cnt),sizeof(int));
-        file.write(reinterpret_cast<char*>(&a.ms),sizeof(int));
-        file.write(reinterpret_cast<char*>(a.val.data()),a.ms*sizeof(std::pair<bool,T>));
+        while(info[1]<info[0])
+        {
+            new_block(info[1]);
+            info[1]+=CACHESIZE;
+        }
+        update_list<T>(a,index);
         return index;
     }
 };
@@ -288,11 +357,7 @@ public:
                     {
                         file.update_T(CNT,tmp.son[i]);
                         auto tmp_pair=std::make_pair(true,val);
-                        if(file.cache.contains(tmp.son[i]+2*sizeof(int)))
-                            memcpy(file.cache[tmp.son[i]+2*sizeof(int)].data()+(CNT-1)*sizeof(std::pair<bool,T0>),
-                                &tmp_pair,sizeof(std::pair<bool,T0>));
-                        else
-                            file.update_T(tmp_pair,tmp.son[i]+2*sizeof(int)+(CNT-1)*sizeof(tmp_pair),false);
+                        file.update_T(tmp_pair,tmp.son[i]+2*sizeof(int)+(CNT-1)*sizeof(std::pair<bool,T0>));
                     }
                     else
                     {
@@ -443,11 +508,7 @@ public:
                 {
                     file.update_T(CNT,tmp.son[i]);
                     const auto tmp_pair=std::make_pair(false,val);
-                    if(file.cache.contains(tmp.son[i]+2*sizeof(int)))
-                        memcpy(file.cache[tmp.son[i]+2*sizeof(int)].data()+(CNT-1)*sizeof(std::pair<bool,T0>),
-                            &tmp_pair,sizeof(tmp_pair));
-                    else
-                        file.update_T(tmp_pair,tmp.son[i]+2*sizeof(int)+(CNT-1)*sizeof(std::pair<bool,T0>),false);
+                    file.update_T(tmp_pair,tmp.son[i]+2*sizeof(int)+(CNT-1)*sizeof(std::pair<bool,T0>));
                 }
                 else
                 {
