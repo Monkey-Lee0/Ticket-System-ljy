@@ -1,3 +1,4 @@
+#pragma GCC optimize("Ofast")
 #include<cstdio>
 #include"database.h"
 B_Plus_Tree<char[65],int> BPT("Data");

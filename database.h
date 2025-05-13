@@ -10,7 +10,7 @@
 using namespace sjtu;
 
 constexpr int MAXN=24;
-constexpr int CACHESIZE=512;
+constexpr int CACHESIZE=256;
 using name60=char[61];
 using name30=char[31];
 using name20=char[21];
