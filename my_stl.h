@@ -15,7 +15,7 @@ class vector
 	size_t reals;
 	void doubleSpace()
 	{
-		auto pre_p=p;
+		const auto pre_p=p;
 		p=new char[2*maxs*sizeof(T)];
 		memcpy(p,pre_p,maxs*sizeof(T));
 		delete[] pre_p;

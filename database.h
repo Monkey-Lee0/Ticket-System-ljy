@@ -447,19 +447,19 @@ public:
                 if(tmp.son[i]<0)
                     return {};
                 auto X=file.read_list<T0>(tmp.son[i]);
-                vector<std::pair<T0,std::pair<int,bool>>> res;
+                vector<std::pair<T0,int>> res;
                 if(!X.cnt)
                     return {};
                 for(int j=0;j<X.cnt;j++)
-                    res.push_back(std::make_pair(X.val[j].second,std::make_pair(j,X.val[j].first)));
-                sort<std::pair<T0,std::pair<int,bool>>>(res.begin(),res.end());
+                    res.push_back(std::make_pair(X.val[j].second,2*j+X.val[j].first));
+                sort<std::pair<T0,int>>(res.begin(),res.end());
                 vector<T0> ans;
                 T0 las=res[0].first;int count=0;
                 for(auto [a,b]:res)
                 {
                     if(las==a)
                     {
-                        if(b.second)
+                        if(b&1)
                             count++;
                         else if(count)
                             count--;
@@ -469,7 +469,7 @@ public:
                         if(count)
                             ans.push_back(las);
                         las=a;
-                        if(b.second)
+                        if(b&1)
                             count=1;
                         else
                             count=0;
