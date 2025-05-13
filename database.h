@@ -4,12 +4,10 @@
 #include<fstream>
 #include<utility>
 #include<cstring>
-#include<vector>
-#include<iostream>
 #include<unordered_map>
-#include<set>
-#include<algorithm>
-#include<climits>
+#include"my_stl.h"
+
+using namespace sjtu;
 
 constexpr int MAXN=24;
 constexpr int CACHESIZE=512;
@@ -33,7 +31,7 @@ template<class T>
 class List
 {
 public:
-    std::vector<std::pair<bool,T>> val;
+    vector<std::pair<bool,T>> val;
     int cnt=0,ms=4;
     List()=default;
     explicit List(const bool tim,const T& a)
@@ -53,7 +51,7 @@ private:
     std::unordered_map<int,std::string> cache;
     std::unordered_map<int,bool> cache_state;
     std::unordered_map<int,int> cache_times;
-    std::vector<int> cache_stack[10];
+    vector<int> cache_stack[10];
     void download()// Erase block from cache
     {
         int index=-1;
@@ -433,14 +431,14 @@ public:
         else
             file.update_T(tmp,now);
     }
-    std::vector<int> Find(const T key)
+    vector<int> Find(const T key)
     {
         if(!file.read_info(3))
             return {};
         const int now=search_to_leaf(key);
         auto tmp=file.read_T<Node<T>>(now);
         const auto cnt=COUNT_OF(tmp);
-        std::vector<T0> val;
+        vector<T0> val;
         for(int i=0;i<cnt;i++)
         {
             const int ok=strcmp(tmp.key[i],key);
@@ -449,23 +447,44 @@ public:
                 if(tmp.son[i]<0)
                     return {};
                 auto X=file.read_list<T0>(tmp.son[i]);
-                std::set<T0> S;
+                vector<std::pair<T0,std::pair<int,bool>>> res;
+                if(!X.cnt)
+                    return {};
                 for(int j=0;j<X.cnt;j++)
-                    if(!X.val[j].first)
-                        S.erase(X.val[j].second);
+                    res.push_back(std::make_pair(X.val[j].second,std::make_pair(j,X.val[j].first)));
+                sort<std::pair<T0,std::pair<int,bool>>>(res.begin(),res.end());
+                vector<T0> ans;
+                T0 las=res[0].first;int count=0;
+                for(auto [a,b]:res)
+                {
+                    if(las==a)
+                    {
+                        if(b.second)
+                            count++;
+                        else if(count)
+                            count--;
+                    }
                     else
-                        S.insert(X.val[j].second);
-                std::vector<int> res;
-                for(auto t:S)
-                    res.push_back(t);
-                if(S.size()!=X.val.size())
+                    {
+                        if(count)
+                            ans.push_back(las);
+                        las=a;
+                        if(b.second)
+                            count=1;
+                        else
+                            count=0;
+                    }
+                }
+                if(count)
+                    ans.push_back(las);
+                if(ans.size()!=X.cnt)
                 {
                     X.cnt=0;
-                    for(auto t:S)
+                    for(auto t:ans)
                         X.val[X.cnt++]=std::make_pair(1,t);
                     file.update_list(X,tmp.son[i]);
                 }
-                return res;
+                return ans;
             }
             if(ok>0)
                 return{};

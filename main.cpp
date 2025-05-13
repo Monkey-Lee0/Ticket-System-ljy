@@ -1,6 +1,5 @@
-#include<bits/stdc++.h>
+#include<cstdio>
 #include"database.h"
-using namespace std;
 B_Plus_Tree<char[65],int> BPT("Data");
 
 int main()
