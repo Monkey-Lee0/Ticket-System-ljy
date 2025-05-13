@@ -9,8 +9,7 @@
 
 using namespace sjtu;
 
-constexpr int MAXN=24;
-constexpr int CACHESIZE=256;
+constexpr int MAXN=4;
 using name60=char[61];
 using name30=char[31];
 using name20=char[21];
@@ -57,6 +56,7 @@ private:
     }
     void upload(const int l,const int r)// Push block to cache  (if overcrowded, delete the element earliest visited)
     {
+        puts("?????");
         if(cache.contains(l)&&cache[l].size()==r-l)
             return ;
         if(cache.size()>2048)
@@ -69,10 +69,15 @@ private:
     }
     std::string read_data(const int l,const int r)// to get data from an interval
     {
-        upload(l,r);
-        return cache[l];
+        std::string str;
+        str.resize(r-l);
+        file.seekg(l);
+        file.read(str.data(),r-l);
+        return str;
+        // upload(l,r);
+        // return cache[l];
     }
-    void write_data(const int l,const int r,const std::string& str, const int upl=true)// to write data to an interval
+    void write_data(const int l,const int r,const std::string& str, const int upl=false)// to write data to an interval
     {
         if(upl)
             upload(l,r),cache[l]=str;
@@ -126,7 +131,7 @@ public:
     template<class T>
     T read_T(const int index){return *reinterpret_cast<T*>(read_data(index,index+sizeof(T)).data());}
     template<class T>
-    void update_T(T &a,const int index,int upl=true)
+    void update_T(T &a,const int index,int upl=false)
     {
         std::string str;
         str.resize(sizeof(T));
