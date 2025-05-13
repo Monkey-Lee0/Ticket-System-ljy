@@ -30,14 +30,23 @@ template<class T>
 class List
 {
 public:
-	std::vector<std::pair<bool,T>> val;
+	std::pair<bool,T>* val;
 	int cnt=0,ms=4;
 	List()=default;
 	explicit List(const bool tim,const T& a)
 	{
-		val.resize(4);
+		val=new std::pair<bool,T>[4];
 		val[cnt++]=std::make_pair(tim,a);
 	}
+	void doubleSpace()
+	{
+		auto odd=val;
+		val=new std::pair<bool,T>[ms<<1];
+		memcpy(val,odd,sizeof(std::pair<bool,T>)*ms);
+		ms<<=1;
+		delete[] odd;
+	}
+	~List(){delete[] val;}
 };
 
 // An advanced Memoryriver for any normal types and lists.
@@ -221,8 +230,8 @@ public:
 		List<T> res;
 		res.cnt=*reinterpret_cast<int*>(read_data(index,index+sizeof(int)).data());
 		res.ms=*reinterpret_cast<int*>(read_data(index+sizeof(int),index+2*sizeof(int)).data());
-		res.val.resize(res.ms);
-		memcpy(res.val.data(),read_data(index+2*sizeof(int),
+		res.val=new std::pair<bool,T>[res.ms];
+		memcpy(reinterpret_cast<char*>(res.val),read_data(index+2*sizeof(int),
 			index+2*sizeof(int)+res.ms*sizeof(std::pair<bool,T>)).data(),res.ms*sizeof(std::pair<bool,T>));
 		return res;
 	}
@@ -233,7 +242,7 @@ public:
 		update_T(a.ms,index+sizeof(int));
 		std::string str;
 		str.resize(a.ms*sizeof(std::pair<bool,T>));
-		memcpy(str.data(),a.val.data(),a.ms*sizeof(std::pair<bool,T>));
+		memcpy(str.data(),reinterpret_cast<char*>(a.val),a.ms*sizeof(std::pair<bool,T>));
 		write_data(index+2*sizeof(int),index+2*sizeof(int)+a.ms*sizeof(std::pair<bool,T>),str);
 	}
 	template<class T>
@@ -361,8 +370,7 @@ public:
 					else
 					{
 						auto X=file.read_list<T0>(tmp.son[i]);
-						X.ms<<=1;
-						X.val.resize(X.ms);
+						X.doubleSpace();
 						X.val[X.cnt++]=std::make_pair(true,val);
 						tmp.son[i]=file.write_list(X);
 						file.update_T(tmp,now);
@@ -446,9 +454,9 @@ public:
 				if(tmp.son[i]<0)
 					return {};
 				auto X=file.read_list<T0>(tmp.son[i]);
-				std::stable_sort(X.val.begin(),X.val.begin()+X.cnt,
+				std::stable_sort(X.val,X.val+X.cnt,
 					[](const std::pair<bool,T0> &a,const std::pair<bool,T0> &b){return a.second<b.second;});
-				if(X.val.size()==0)
+				if(!X.cnt)
 					return {};
 				std::vector<T0> res;
 				T0 las=X.val[0].second;int count=0;
@@ -472,7 +480,7 @@ public:
 					}
 				if(count)
 					res.push_back(las);
-				if(res.size()!=X.val.size())
+				if(res.size()!=X.cnt)
 				{
 					X.cnt=0;
 					for(auto t:res)
@@ -508,8 +516,7 @@ public:
 				else
 				{
 					auto X=file.read_list<T0>(tmp.son[i]);
-					X.ms<<=1;
-					X.val.resize(X.ms);
+					X.doubleSpace();
 					X.val[X.cnt++]=std::make_pair(false,val);
 					tmp.son[i]=file.write_list(X);
 					file.update_T(tmp,now);
