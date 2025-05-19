@@ -75,12 +75,14 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
     {
         if(strcmp(train.stations[j],dest)==0)
             break;
-        now_time=now_time+train.stopoverTimes[j]+train.travelTimes[j];
-        total_time+=train.stopoverTimes[j]+train.travelTimes[j];
+        now_time=now_time+train.travelTimes[j];
+        total_time+=train.travelTimes[j];
+        if(j>s)
+            now_time=now_time+train.stopoverTimes[j-1],total_time+=train.stopoverTimes[j-1];
         total_price+=train.prices[j];
         max_seat=std::min(max_seat,train.seatNum-train.seats[start_md][j]);
     }
-    ticket.price=total_price*num;
+    ticket.price=total_price;
     ticket.dest_time=now_time;
     if(max_seat>=num)
     {
@@ -94,7 +96,7 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
         train_info.update_T(train,res[0]);
         const auto pos=ticket_info.write_T(ticket);
         ticket_tree.Insert(my_c_str<21>(username),pos);
-        return ticket.price;
+        return ticket.price*ticket.num;
     }
     if(!queue)
         return -1;

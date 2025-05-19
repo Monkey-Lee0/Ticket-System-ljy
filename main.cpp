@@ -7,12 +7,15 @@
 std::string str;
 int main()
 {
+    // freopen("10.in","r",stdin);
+    // freopen("10.ans","w",stdout);
     while(true)
     {
         std::getline(std::cin,str);
         std::string r_str;
         while(!str.empty())
             r_str.push_back(str.back()),str.pop_back();
+        std::cout<<decompose(r_str)<<" ";
         std::string cmd=decompose(r_str);
         if(cmd=="exit")
         {

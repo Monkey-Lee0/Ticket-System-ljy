@@ -220,8 +220,10 @@ inline std::pair<int,std::string*> query_ticket(const char* depart,const char* d
         {
             if(strcmp(train.stations[j],dest)==0)
                 break;
-            now_time=now_time+train.stopoverTimes[j]+train.travelTimes[j];
-            total_time+=train.stopoverTimes[j]+train.travelTimes[j];
+            now_time=now_time+train.travelTimes[j];
+            total_time+=train.travelTimes[j];
+            if(j>s)
+                total_time+=train.stopoverTimes[j-1],now_time=now_time+train.stopoverTimes[j-1];
             total_price+=train.prices[j];
             max_seat=std::min(max_seat,train.seatNum-train.seats[start_md][j]);
         }
@@ -283,7 +285,7 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
             if(j!=s)
             {
                 std::string Str1=Str1_t+std::string(train.stations[j])+" "+now_time.to_string()+" "+
-                    std::to_string(max_seat)+" "+std::to_string(total_price);
+                    std::to_string(total_price)+" "+std::to_string(max_seat);
                 auto res_inner=from_to_tree.Find(my_c_str<62>(
                     std::string(train.stations[j])+"-"+std::string(dest)));
                 for(int k=0;k<res_inner.cnt;k++)
@@ -321,14 +323,16 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                     {
                         if(strcmp(train_inner.stations[p],dest)==0)
                             break;
-                        inner_time=inner_time+train_inner.stopoverTimes[p]+train_inner.travelTimes[p];
+                        inner_time=inner_time+train_inner.travelTimes[p];
+                        if(p>ss)
+                            inner_time=inner_time+train_inner.stopoverTimes[p-1];
                         total_price_inner+=train_inner.prices[p];
                         max_seat_inner=std::min(max_seat_inner,train_inner.seatNum-
                             train_inner.seats[start_md_inner][p]);
                     }
                     int total_time_inner=total_time+(inner_time.to_int()-now_time.to_int());
-                    Str2+=inner_time.to_string()+" "+std::to_string(max_seat_inner)+" "+
-                        std::to_string(total_price_inner-total_price);
+                    Str2+=inner_time.to_string()+" "+std::to_string(total_price_inner-total_price)+" "+
+                        std::to_string(max_seat_inner);
                     std::string ID1=std::string(train.trainID);
                     std::string ID2=std::string(train_inner.trainID);
                     if(key[0]=='t')
@@ -343,8 +347,10 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                             ans1=total_time_inner,ans2=total_price_inner,ans3=ID1,ans4=ID2,str1=Str1,str2=Str2;
                 }
             }
-            now_time=now_time+train.stopoverTimes[j]+train.travelTimes[j];
-            total_time+=train.stopoverTimes[j]+train.travelTimes[j];
+            now_time=now_time+train.travelTimes[j];
+            total_time+=train.travelTimes[j];
+            if(j>s)
+                now_time=now_time+train.stopoverTimes[j-1],total_time+=train.stopoverTimes[j-1];
             total_price+=train.prices[j];
             max_seat=std::min(max_seat,train.seatNum-train.seats[start_md][j]);
         }
