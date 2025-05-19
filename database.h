@@ -655,7 +655,7 @@ public:
 			if(ok==0)
 			{
 				if(tmp.son[i]<0)
-					return {};
+					return T0();
 				const int count=file.read_T<int>(tmp.son[i]);
 				if(count<k)
 					return T0();

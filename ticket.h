@@ -44,6 +44,8 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
     auto train=train_info.read_T<Train>(res[0]);
     if(!train.release)
         return -1;
+    if(num>train.seatNum)
+        return -1;
     auto ticket=Ticket();
     strcpy(ticket.trainID,trainID);
     strcpy(ticket.depart,depart);
@@ -52,7 +54,7 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
     const Time today(day_str,true,false);
     Time now_time=train.startTime;
     now_time.mon=today.mon,now_time.day=today.day;
-    int s=0;
+    int s=-1;
     for(int j=0;j<train.stationNum;j++)
     {
         if(strcmp(train.stations[j],depart)==0)
@@ -62,6 +64,8 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
         }
         now_time=now_time+train.stopoverTimes[j]+train.travelTimes[j];
     }
+    if(s==-1)
+        return -1;
     const int start_md=2*today.to_int_md()-now_time.to_int_md();
     const int l_md=train.saleDate_l.to_int_md();
     const int r_md=train.saleDate_r.to_int_md();
@@ -75,6 +79,8 @@ inline int buy_ticket(const char* username,const char* trainID,const char* day_s
     {
         if(strcmp(train.stations[j],dest)==0)
             break;
+        if(j==train.stationNum-1)
+            return -1;
         now_time=now_time+train.travelTimes[j];
         total_time+=train.travelTimes[j];
         if(j>s)
@@ -141,7 +147,7 @@ inline bool refund_ticket(const char* username,const int n)
     {
         ticket.status=-1;
         ticket_info.update_T(ticket,pos);
-        return false;
+        return true;
     }
     ticket.status=-1;
     ticket_info.update_T(ticket,pos);

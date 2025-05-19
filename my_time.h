@@ -40,7 +40,7 @@ struct Time
         hour%=24;
         if(mon==6&&day>30)
             mon++,day-=30;
-        else if(mon>=7&&day>31)
+        while(mon>=7&&day>31)
             mon++,day-=31;
     }
     Time operator+(const int Min)const
@@ -57,6 +57,8 @@ struct Time
     }
     [[nodiscard]] int to_int_md() const
     {
+        if(mon<6||mon>9)
+            return -1;
         if(mon==6)
             return day-1;
         if(mon==7)

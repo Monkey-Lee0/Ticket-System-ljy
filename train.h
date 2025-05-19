@@ -282,7 +282,7 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
         int total_time=0,total_price=0,max_seat=train.seatNum;
         for(int j=s;j<train.stationNum;j++)
         {
-            if(j!=s)
+            if(j!=s&&strcmp(train.stations[j],dest)!=0)
             {
                 std::string Str1=Str1_t+std::string(train.stations[j])+" "+now_time.to_string()+" "+
                     std::to_string(total_price)+" "+std::to_string(max_seat);
@@ -291,6 +291,8 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                 for(int k=0;k<res_inner.cnt;k++)
                 {
                     const auto train_inner=train_info.read_T<Train>(res_inner[k]);
+                    if(strcmp(train.trainID,train_inner.trainID)==0)
+                        continue;
                     if(!train_inner.release)
                         continue;
                     Time inner_time=train_inner.startTime;
@@ -314,7 +316,7 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                     if(start_md_inner>r_md_inner)
                         continue;
                     if(start_md_inner<l_md_inner)
-                        inner_time=inner_time+1440*(l_md_inner-start_md_inner);
+                        inner_time=inner_time+1440*(l_md_inner-start_md_inner),start_md_inner=l_md_inner;
                     std::string Str2=std::string(train_inner.trainID)+" "+std::string(train.stations[j])+" "+
                         inner_time.to_string()+" -> "+std::string(dest)+" ";
                     int max_seat_inner=train_inner.seatNum;
@@ -340,11 +342,11 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                             (total_time_inner==ans1&&total_price_inner==ans2&&ID1<ans3)||
                             (total_time_inner==ans1&&total_price_inner==ans2&&ID1==ans3&&ID2<ans4))
                             ans1=total_time_inner,ans2=total_price_inner,ans3=ID1,ans4=ID2,str1=Str1,str2=Str2;
-                    if(key[0]=='p')
+                    if(key[0]=='c')
                         if(total_price_inner<ans1||(total_price_inner==ans1&&total_time_inner<ans2)||
                             (total_price_inner==ans1&&total_time_inner==ans2&&ID1<ans3)||
                             (total_price_inner==ans1&&total_time_inner==ans2&&ID1==ans3&&ID2<ans4))
-                            ans1=total_time_inner,ans2=total_price_inner,ans3=ID1,ans4=ID2,str1=Str1,str2=Str2;
+                            ans1=total_price_inner,ans2=total_time_inner,ans3=ID1,ans4=ID2,str1=Str1,str2=Str2;
                 }
             }
             now_time=now_time+train.travelTimes[j];
