@@ -22,10 +22,10 @@ struct User
     User()=default;
 };
 
-inline B_Plus_Tree<char[21],bool,true> login_state("data/LoginState");
+inline B_Plus_Tree<char[21],bool,true> login_state("LoginState");
 
-inline B_Plus_Tree<char[21],int> user_tree("data/UserTree");
-inline DataInteractor user_info("data/UserInfo");
+inline B_Plus_Tree<char[21],int> user_tree("UserTree");
+inline DataInteractor user_info("UserInfo");
 
 inline User query_profile(const char* curUserName,const char* userName,const bool check=true)
 {

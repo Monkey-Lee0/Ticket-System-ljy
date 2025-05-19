@@ -5,8 +5,8 @@
 #include "train.h"
 #include "user.h"
 
-inline B_Plus_Tree<char[21],int> ticket_tree("data/TicketTree");
-inline DataInteractor ticket_info("data/TicketInfo");
+inline B_Plus_Tree<char[21],int> ticket_tree("TicketTree");
+inline DataInteractor ticket_info("TicketInfo");
 
 struct Ticket
 {

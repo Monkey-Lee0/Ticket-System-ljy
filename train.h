@@ -5,11 +5,11 @@
 #include "database.h"
 #include "tools.h"
 
-inline B_Plus_Tree<char[21],int> train_tree("data/TrainTree");
-inline B_Plus_Tree<char[62],int> from_to_tree("data/FromToTree");
-inline B_Plus_Tree<char[24],int> wait_tree("data/WaitTree");
-inline DataInteractor train_info("data/TrainInfo");
-inline DataInteractor wait_list("data/WaitList");
+inline B_Plus_Tree<char[21],int> train_tree("TrainTree");
+inline B_Plus_Tree<char[62],int> from_to_tree("FromToTree");
+inline B_Plus_Tree<char[24],int> wait_tree("WaitTree");
+inline DataInteractor train_info("TrainInfo");
+inline DataInteractor wait_list("WaitList");
 
 struct Train
 {
