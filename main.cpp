@@ -7,8 +7,8 @@
 std::string str;
 int main()
 {
-    // freopen("10.in","r",stdin);
-    // freopen("10.ans","w",stdout);
+    // freopen("1.in","r",stdin);
+    // freopen("1.ans","w",stdout);
     while(true)
     {
         std::getline(std::cin,str);
