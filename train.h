@@ -13,6 +13,19 @@ inline DataInteractor wait_list("WaitList");
 
 struct Train
 {
+    struct char3
+    {
+        unsigned char a,b,c;
+        char3():a(0),b(0),c(0){}
+        char3(const char &A,const char &B,const char& C):a(A),b(B),c(C){}
+        char3(const int &x):a(x%256),b(x/256%256),c(x/65536){}
+        char3(const char3 &x):a(x.a),b(x.b),c(x.c){}
+        operator int()const{return (c*256+b)*256+a;}
+        char3 operator+(const char3 &A)const{return static_cast<int>(*this)+static_cast<int>(A);}
+        char3& operator+=(const char3 &A){*this=*this+A;return *this;}
+        char3 operator-(const char3 &A)const{return static_cast<int>(*this)-static_cast<int>(A);}
+        char3& operator-=(const char3 &A){*this=*this-A;return *this;}
+    };
     char trainID[21]="";
     int stationNum=-1;
     char stations[101][31]{};
@@ -24,7 +37,7 @@ struct Train
     Time saleDate_l,saleDate_r;
     char type=' ';
     bool release=false;
-    int seats[101][101]{};
+    char3 seats[101][101]{char3(0)};
 };
 
 struct WaitList
@@ -132,7 +145,7 @@ inline Train query_train(const char* trainID)
 {
     auto res=train_tree.Find(my_c_str<21>(trainID));
     if(res.empty())
-        return {};
+        return Train();
     return train_info.read_T<Train>(res[0]);
 }
 
