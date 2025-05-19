@@ -294,7 +294,7 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                     if(!train_inner.release)
                         continue;
                     Time inner_time=train_inner.startTime;
-                    inner_time.mon=now_time.mon,inner_time.day=now_time.mon;
+                    inner_time.mon=now_time.mon,inner_time.day=now_time.day;
                     int ss=0;
                     for(int p=0;p<train_inner.stationNum;p++)
                     {
@@ -314,7 +314,7 @@ inline std::pair<std::string,std::string> query_transfer(const char* depart,cons
                     if(start_md_inner>r_md_inner)
                         continue;
                     if(start_md_inner<l_md_inner)
-                        now_time=now_time+1440*(l_md_inner-start_md_inner);
+                        inner_time=inner_time+1440*(l_md_inner-start_md_inner);
                     std::string Str2=std::string(train_inner.trainID)+" "+std::string(train.stations[j])+" "+
                         inner_time.to_string()+" -> "+std::string(dest)+" ";
                     int max_seat_inner=train_inner.seatNum;

@@ -215,6 +215,7 @@ public:
 	// services for constructor and destructor
 	explicit DataInteractor(const std::string &FILE,const int clear=false):file_name(FILE)
 	{
+		system("mkdir data");
 		std::ifstream tmp_file;tmp_file.open(FILE);
 		const int mode=!tmp_file.good()||clear;
 		tmp_file.close();
